@@ -5,7 +5,7 @@ Convert wikipedia dumps into a simple json representation without all the cruft.
 
 ### Getting Started
 
-Detailed documentation is available via: [wikijson.readthedocs.org](http://wikijson.readthedocs.org/en/latest/).
+<!---Detailed documentation is available via: [wikijson.readthedocs.org](http://wikijson.readthedocs.org/en/latest/).-->
 
 ## Usage
 
