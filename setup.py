@@ -9,7 +9,7 @@ setup(
     description = 'Wikipedia to JSON',
     author='Andrew Chisholm',
     packages = find_packages(),
-    license = 'MIT',
+    license = 'GPL',
     url = 'https://github.com/andychisholm/wikijson',
     entry_points = {
         'console_scripts': [
