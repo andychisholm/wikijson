@@ -13,7 +13,7 @@ Detailed documentation is available via: [wikijson.readthedocs.org](http://wikij
 # download the latest wikipedia dump (~12GB)
 wget http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
 
-# convert wikimarkup articles in a compressed files with one json encoded article per line (~6GB)
+# extract articles from wiki markup into a compressed file with one json encoded article per line (~6GB)
 wikijson process-dump enwiki-latest-pages-articles.xml.bz2 wikipedia.js.gz
 ```
 
@@ -29,16 +29,16 @@ with gzip.open('wikipedia.js.gz', 'r') as f:
 
 ## Article Schema
 
-```json
+```javascript
 {
-    'id': number,
-    'title': string,
-    'text': string,
-    'categories': [string],
-    'links': [{
-        'target': string,
-        'start': number,
-        'stop': number
+    "id": number,
+    "title": string,
+    "text": string,
+    "categories": [string],
+    "links": [{
+        "target": string,
+        "start": number,
+        "stop": number
     }]
 }
 ```
