@@ -637,6 +637,8 @@ def read_file(path, out_q):
                 prefix = base[:base.rfind("/")]
     out_q.put(None)
 
+from multiprocessing import Process, Queue, cpu_count
+
 def process_file(in_q, out_q):
     while True:
         result = in_q.get()
@@ -654,7 +656,7 @@ def iter_items(input_path):
     reader.daemon = True
     reader.start()
     processors = []
-    for _ in xrange(max(cpu_count()-4, 1)):
+    for _ in xrange(max(cpu_count()-1, 1)):
         processor = Process(target=process_file, args=(in_q, out_q))
         processor.daemon = True
         processor.start()
