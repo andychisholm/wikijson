@@ -17,9 +17,9 @@ class ProcessDump(object):
         log.info('Processing wiki dump: %s ...', self.wk_dump_path)
         with gzip.open(self.output_path, 'w') as f:
             t = time()
-            for i, (id, title, text, links, categories, qsz) in enumerate(extractor.iter_items(self.wk_dump_path)):
-                if i % 100000 == 0:
-                    log.info('Processed %i items, %.1fs, %i...', i, time() - t, qsz)
+            for i, (id, title, text, links, categories) in enumerate(extractor.iter_items(self.wk_dump_path)):
+                if i % 100000 == 0 or i == 1000 or i == 10000:
+                    log.info('Processed %i articles, %.1fs...', i, time() - t)
                     t = time()
 
                 f.write(json.dumps({
