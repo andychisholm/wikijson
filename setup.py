@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 __pkg_name__ = 'wikijson'
 
 setup(
@@ -9,19 +9,17 @@ setup(
     description = 'Wikipedia to JSON',
     author='Andrew Chisholm',
     packages = find_packages(),
-    license = 'GPL',
-    url = 'https://github.com/andychisholm/wikijson',
-    entry_points = {
-        'console_scripts': [
-            'wkjs = wikijson.__main__:main',
-            'wikijson = wikijson.__main__:main'
-        ]
+    license = 'LGPL',
+    url = 'https://github.com/wikilinks/wikijson',
+    scripts = {
+        'scripts/wkjs',
+        'scripts/wkdl'
     },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Programming Language :: Python :: 2.7',
         'Topic :: Text Processing :: Linguistic'
     ],

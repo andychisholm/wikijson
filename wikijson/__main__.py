@@ -4,10 +4,15 @@ import re
 import sys
 import textwrap
 
-from wikijson import process
+import process
 
 import logging
 log = logging.getLogger()
+
+logFormat = '%(asctime)s|%(levelname)s|%(module)s|%(message)s'
+logging.basicConfig(format=logFormat)
+log = logging.getLogger()
+log.setLevel(logging.INFO)
 
 APPS = [
     process.ProcessDump

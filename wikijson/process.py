@@ -1,44 +1,61 @@
-import gzip
+import os
+import shutil
 import ujson as json
+import wikispark
 
-from wikijson import extractor
-from time import time
+from pyspark import SparkContext, SparkConf
 
 import logging
 log = logging.getLogger()
 
 class ProcessDump(object):
     """ Extra a simple json representation for each article in a wikipedia dump """
-    def __init__(self, wk_dump_path, output_path):
+    def __init__(self, wk_dump_path, output_path, redirect_links):
         self.wk_dump_path = wk_dump_path
         self.output_path = output_path
+        self.redirect_links = True
 
     def __call__(self):
         log.info('Processing wiki dump: %s ...', self.wk_dump_path)
-        with gzip.open(self.output_path, 'w') as f:
-            t = time()
-            for i, (id, title, text, links, categories) in enumerate(extractor.iter_items(self.wk_dump_path)):
-                if i % 100000 == 0 or i == 1000 or i == 10000:
-                    log.info('Processed %i articles, %.1fs...', i, time() - t)
-                    t = time()
+        c = SparkConf().setAppName('Wikijson')
 
-                f.write(json.dumps({
-                    'id': id,
-                    'title': title.replace(' ', '_'),
-                    'text': text,
-                    'categories': categories,
-                    'links': [{
-                        'target': target,
-                        'start': span.start,
-                        'stop': span.stop
-                    } for target, span in links]
-                }) + '\n')
+        log.info('Using spark master: %s', c.get('spark.master'))
+        sc = SparkContext(conf=c)
 
+        if os.path.isdir(self.output_path):
+            log.warn('Writing over output path: %s', self.output_path)
+            shutil.rmtree(self.output_path)
+
+        # rdd of tuples: (title, namespace, id, redirect, content)
+        pages = wikispark.get_pages_from_wikidump(sc, self.wk_dump_path)
+        pages.cache()
+
+        articles = wikispark.get_articles_from_pages(pages).cache()
+        redirects = wikispark.get_redirects_from_pages(pages)
+
+        if self.redirect_links:
+            articles = wikispark.redirect_article_links(articles, redirects)
+
+        articles.saveAsTextFile(self.output_path, 'org.apache.hadoop.io.compress.GzipCodec')
         log.info('Done.')
+
+    @staticmethod
+    def article_to_json(article):
+        pid, (text, links) = article
+        return {
+            'id': pid,
+            'text': text,
+            'links': [{
+                'target': target,
+                'start': span.start,
+                'stop': span.stop
+            } for target, span in links]
+        }
 
     @classmethod
     def add_arguments(cls, p):
         p.add_argument('wk_dump_path', metavar='WK_DUMP_PATH')
         p.add_argument('output_path', metavar='OUTPUT_PATH')
-        p.set_defaults(cls=cls)
+        p.add_argument('--no-redirect', dest='redirect_links', action='store_false')
+        p.set_defaults(redirect_links=True, cls=cls)
         return p

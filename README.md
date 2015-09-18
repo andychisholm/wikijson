@@ -3,38 +3,45 @@ wikijson - Wikipedia to JSON
 
 Convert wikipedia dumps into a simple json representation without all the cruft.
 
-### Getting Started
-
 <!---Detailed documentation is available via: [wikijson.readthedocs.org](http://wikijson.readthedocs.org/en/latest/).-->
 
-## Usage
+## Quick Start
 
+### Install
 ```bash
-# download the latest wikipedia dump (~12GB)
-wget http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
-
-# extract articles from wiki markup into a compressed file with one json encoded article per line (~6GB)
-wikijson process-dump enwiki-latest-pages-articles.xml.bz2 wikipedia.js.gz
+virtualenv ve
+. ve/bin/activate
+pip install git+http://git@github.com/wikilinks/wikijson.git
 ```
 
-## Processing Output
+### Process Wikipedia
+```bash
+# download the latest partitioned wikipedia dump
+# see available dumps: http://dumps.wikimedia.org/enwiki/
+wkdl latest
 
-```python
-import json
-import gzip
-with gzip.open('wikipedia.js.gz', 'r') as f:
-    for line in f:
-        article = json.loads(line)
+# process the dump under 'latest', store the result under 'latest_js'
+wkjs process-dump latest_raw latest_js
 ```
 
-## Article Schema
+## Spark
+
+__wikijson__ uses Spark to process the Wikipedia dump in parallel.
+
+If you'd like to make use of an existing Spark cluster, ensure the `SPARK_HOME` environment variable is set.
+
+If not, `wkjs` will prompt you to download and run Spark locally in standalone mode.
+
+## Performance
+
+On a cluster of 4 machines with 64 worker cores, it takes around 15 minutes to process a complete Wikipedia dump and map article links via redirects.
+
+## Output Schema
 
 ```javascript
 {
-    "id": number,
     "title": string,
     "text": string,
-    "categories": [string],
     "links": [{
         "target": string,
         "start": number,
@@ -42,7 +49,3 @@ with gzip.open('wikipedia.js.gz', 'r') as f:
     }]
 }
 ```
-
-### Credits
-
-This project is based on the Wiki processing [script](https://github.com/attardi/wikiextractor) by Giuseppe Attardi and inherits its GPL licence.
