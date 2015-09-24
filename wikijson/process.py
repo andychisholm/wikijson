@@ -30,20 +30,23 @@ class ProcessDump(object):
         pages = wikispark.get_pages_from_wikidump(sc, self.wk_dump_path)
         pages.cache()
 
-        articles = wikispark.get_articles_from_pages(pages).cache()
+        articles = wikispark.get_articles_from_pages(pages)
         redirects = wikispark.get_redirects_from_pages(pages)
 
         if self.redirect_links:
             articles = wikispark.redirect_article_links(articles, redirects)
 
-        articles.saveAsTextFile(self.output_path, 'org.apache.hadoop.io.compress.GzipCodec')
+        articles.map(self.article_to_json)\
+                .map(json.dumps)\
+                .saveAsTextFile(self.output_path, 'org.apache.hadoop.io.compress.GzipCodec')
+
         log.info('Done.')
 
     @staticmethod
     def article_to_json(article):
-        pid, (text, links) = article
+        title, (text, links) = article
         return {
-            'id': pid,
+            'title': title,
             'text': text,
             'links': [{
                 'target': target,
