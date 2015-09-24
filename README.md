@@ -21,7 +21,7 @@ pip install git+http://git@github.com/wikilinks/wikijson.git
 wkdl latest
 
 # process the dump under 'latest', store the result under 'latest_js'
-wkjs process-dump latest_raw latest_js
+wkjs process-dump latest latest_js
 ```
 
 ## Spark
