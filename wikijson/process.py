@@ -13,7 +13,7 @@ class ProcessDump(object):
     def __init__(self, wk_dump_path, output_path, redirect_links):
         self.wk_dump_path = wk_dump_path
         self.output_path = output_path
-        self.redirect_links = True
+        self.redirect_links = redirect_links
 
     def __call__(self):
         log.info('Processing wiki dump: %s ...', self.wk_dump_path)
