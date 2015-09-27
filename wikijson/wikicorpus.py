@@ -20,7 +20,8 @@ RE_P2 = re.compile("(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$", re.UNICODE) # links
 RE_P3 = re.compile("{{([^}{]*)}}", re.DOTALL | re.UNICODE) # template
 RE_P4 = re.compile("{{([^}]*)}}", re.DOTALL | re.UNICODE) # template
 RE_P5 = re.compile('\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE) # remove URL, keep description
-RE_P6 = re.compile("\[([^][]*)\|([^][]*)\]", re.DOTALL | re.UNICODE) # simplify links, keep description
+RE_P6 = re.compile("\[\[([^][]*)\|([^][]*)\]\]", re.DOTALL | re.UNICODE) # simplify links, keep description
+RE_P6_ex = re.compile("\[\[([^][]*)\]\]", re.DOTALL | re.UNICODE) # links without description
 RE_P7 = re.compile('\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE) # keep description of images
 RE_P8 = re.compile('\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE) # keep description of files
 RE_P9 = re.compile('<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE) # outside links
@@ -43,10 +44,15 @@ RE_HTML_ENT = re.compile("&#?(\w+);")
 def remove_markup(text):
     text = re.sub(RE_P2, "", text)
 
+    # TODO: may be desirable to extract captions for files and images and insert them back into the document
+    text = remove_template(text)
+    text = extract_tag_content(text, [
+        re.compile('\[\[[fF]ile:(.*?)(\|[^\]\[]+?)*\|'),
+        re.compile('\[\[[iI]mage:(.*?)(\|[^\]\[]+?)*\|')
+    ])
+
     # the wiki markup is recursive (markup inside markup etc) we deal with that by removing
     # markup in a loop, starting with inner-most expressions and working outwards as long as something changes.
-    text = remove_template(text)
-    text = remove_file(text)
     iters = 0
     while True:
         old, iters = text, iters + 1
@@ -65,6 +71,7 @@ def remove_markup(text):
         # inject links
         text = re.sub(RE_P5, '<a href="\\2">\\3</a>', text) # remove urls, keep description
         text = re.sub(RE_P6, '<a href="%s\\1">\\2</a>' % wikilink_prefix, text) # simplify links, keep description only
+        text = re.sub(RE_P6_ex, '<a href="%s\\1">\\1</a>' % wikilink_prefix, text)
         # remove table markup
         text = text.replace('||', '\n|') # each table cell on a separate line
         text = re.sub(RE_P12, '\n', text) # remove formatting lines
@@ -115,12 +122,36 @@ def remove_template(s):
 
     return s
 
-def remove_file(s):
-    # The regex RE_P15 match a File: or Image: markup
-    for match in re.finditer(RE_P15, s):
-        m = match.group(0)
-        caption = m[:-2].split('|')[-1]
-        s = s.replace(m, caption, 1)
+def extract_tag_content(s, tags, include_content=True):
+    s = s.replace(u'\u2502','|')
+    for t in tags:
+        parts = []
+        last_match_end = None
+        for match in t.finditer(s):
+            parts.append(slice(last_match_end,match.start()))
+
+            i = match.end()
+            while True:
+                next_open = s.find('[[', i)
+                next_close = s.find(']]', i)
+                if next_open == -1 or next_open > next_close:
+                    last_match_end = next_close
+                    break
+                elif next_close == -1:
+                    # unbalanced tags in wikimarkup, bail!
+                    last_match_end = i
+                    break
+                i = next_close+2
+            if include_content and match.end() != last_match_end:
+                content = s[match.end():last_match_end].strip('] ')
+                if content:
+                    parts.append(slice(match.end(),last_match_end))
+                    if not content.endswith('.'):
+                        parts.append('.')
+            last_match_end += 2
+        parts.append(slice(last_match_end,None))
+        s = ''.join(s[p] if type(p) is slice else p for p in parts)
+
     return s
 
 def html_unescape(text):
