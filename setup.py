@@ -11,10 +11,10 @@ setup(
     packages = find_packages(),
     license = 'LGPL',
     url = 'https://github.com/wikilinks/wikijson',
-    scripts = {
+    scripts = [
         'scripts/wkjs',
         'scripts/wkdl'
-    },
+    ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
