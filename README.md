@@ -20,8 +20,8 @@ pip install git+http://git@github.com/wikilinks/wikijson.git
 # see available dumps: http://dumps.wikimedia.org/enwiki/
 wkdl latest
 
-# process the dump under 'latest', store the result under 'latest_js'
-wkjs process-dump latest latest_js
+# process the dump under 'latest', store the result under 'wikidocs'
+wkjs process-dump latest wikidocs
 ```
 
 ## Spark
